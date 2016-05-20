@@ -40,4 +40,9 @@ If there are multiple rewards that yield the best possible scenario, we simply r
 
 This is more or else the crux of basic Q-Learning.  We only deal with rewards and learn representations of what actions to take in each state.
 
-[Demo Code]
+[Demo Code](https://github.com/EricSchles/open_data_science_east_2016/blob/master/code/basic_rl.py)
+
+As you can see from the above demo we are able to solve the simple "game" of finding positive reward, in a 2-d matrix.  Of course, when dealing with real games, as we will do in later demos there will be some feature transformation we will carry out.  But this gets us pretty close to a realistic representation of how we might carry out simple game AI.
+
+##Adding in Polcies
+
