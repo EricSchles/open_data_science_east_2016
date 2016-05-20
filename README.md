@@ -10,5 +10,8 @@
 
 ##References - Intectual
 
+* A formulation of the n-bandit problem: https://www.willamette.edu/~gorr/classes/cs449/Reinforcement/reinforcement1.html
+* A curated list of RL resources: http://aikorea.org/awesome-rl/
+
 
 ##References - Source Code
