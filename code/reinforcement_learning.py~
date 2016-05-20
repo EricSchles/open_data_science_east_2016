@@ -1,0 +1,3 @@
+def choose_action(state):
+    q = [getQ(state,action) for action in actions]
+    
