@@ -1,0 +1,2 @@
+def df(f,x):
+    return abs(0-f(x))

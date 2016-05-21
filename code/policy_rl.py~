@@ -27,16 +27,18 @@ def choose_action(state,actions,representation):
             action_choice = q.index(max_q)
         return actions[action_choice]
 
-def update_representation(representation,state,action,reward,alpha=0.3):
+def update_representation(representation,counts,state,action,reward,alpha=0.3):
     try:
         current_value = representation[(state,action)]
     except:
         current_value = None
     if current_value:
-        representation[(state,action)] = current_value + alpha * reward
+        representation[(state,action)] = current_value + (1/counts[(state,action)]*( reward - current_value ))
+        counts[(state,action)] += 1
     else:
+        counts[(state,action)] = 1
         representation[(state,action)] = reward
-    return representation
+    return representation,counts
 
 #column,row
 def update_state(action,state,board_height,board_width):
@@ -67,26 +69,23 @@ def generate_new_board_states(board_states):
     for row in board_states:
         states.append([elem() for elem in row])
     return states
-
-def create_board(board_height,board_width):
+    
+def train(board_height,board_width):
+    representation = {}
+    counts = {}
     board = []
     for cur_height in range(board_height):
         board.append([partial(randint,randint(-5,2),randint(2,20)) for _ in range(board_width)])
-    return board
-
-def train(board,iterations):
-    representation = {}
     state = (0,0)
     score = 0
     actions = ("up","down","left","right")
-    for _ in range(iterations):
-        while score < 100:
-            states = generate_new_board_states(board)
-            action = choose_action(state,actions,representation)
-            state = update_state(action,state,len(states),len(states[0]))
-            representation = update_representation(representation,state,action,states[state[0]][state[1]],alpha=0.3)
-            score = sum([elem for elem in representation.values() if elem > 0])
-    return representation
+    while score < 100:
+        states = generate_new_board_states(board)
+        action = choose_action(state,actions,representation)
+        state = update_state(action,state,board_height,board_width)
+        representation,counts = update_representation(representation,counts,state,action,states[state[0]][state[1]],alpha=0.3)
+        score = sum([elem for elem in representation.values() if elem > 0])
+    return board,representation
 
 def play(board,representation):
     state = (0,0)
@@ -107,13 +106,9 @@ def play(board,representation):
 
 def main():
     print("started training")
-    board = create_board(100,100)
-    representation = train(board,50)
+    board,representation = train(100,100)
     print("learned representation")
     count,traversal,path = play(board,representation)
     print("It took",count)
     print(" -> ".join([str(elem) for elem in path]))
     print(" -> ".join([str(elem) for elem in traversal]))
-
-if __name__ == '__main__':
-    main()

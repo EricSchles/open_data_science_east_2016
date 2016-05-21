@@ -1,6 +1,7 @@
 import random
 from functools import partial
 from random import randint
+import statistics #Python3 only
 
 def remove_all(listing,val):
     while val in listing:
@@ -27,16 +28,32 @@ def choose_action(state,actions,representation):
             action_choice = q.index(max_q)
         return actions[action_choice]
 
-def update_representation(representation,state,action,reward,alpha=0.3):
+def update_representation_median(representation,counts,state,action,reward,alpha=0.3):
     try:
         current_value = representation[(state,action)]
     except:
         current_value = None
     if current_value:
-        representation[(state,action)] = current_value + alpha * reward
+        counts[(state,action)] += [reward]
+        representation[(state,action)] = statistics.median(counts[(state,action)])
     else:
+        counts[(state,action)] = [reward]
         representation[(state,action)] = reward
-    return representation
+    return representation,counts
+
+    
+def update_representation_mean(representation,counts,state,action,reward,alpha=0.3):
+    try:
+        current_value = representation[(state,action)]
+    except:
+        current_value = None
+    if current_value:
+        representation[(state,action)] = current_value + (1/counts[(state,action)]*( reward - current_value ))
+        counts[(state,action)] += 1
+    else:
+        counts[(state,action)] = 1
+        representation[(state,action)] = reward
+    return representation,counts
 
 #column,row
 def update_state(action,state,board_height,board_width):
@@ -76,6 +93,7 @@ def create_board(board_height,board_width):
 
 def train(board,iterations):
     representation = {}
+    counts = {}
     state = (0,0)
     score = 0
     actions = ("up","down","left","right")
@@ -84,9 +102,25 @@ def train(board,iterations):
             states = generate_new_board_states(board)
             action = choose_action(state,actions,representation)
             state = update_state(action,state,len(states),len(states[0]))
-            representation = update_representation(representation,state,action,states[state[0]][state[1]],alpha=0.3)
+            representation,counts = update_representation_mean(representation,counts,state,action,states[state[0]][state[1]],alpha=0.3)
             score = sum([elem for elem in representation.values() if elem > 0])
     return representation
+
+def train_with_median(board,iterations):
+    representation = {}
+    counts = {}
+    state = (0,0)
+    score = 0
+    actions = ("up","down","left","right")
+    for _ in range(iterations):
+        while score < 100:
+            states = generate_new_board_states(board)
+            action = choose_action(state,actions,representation)
+            state = update_state(action,state,len(states),len(states[0]))
+            representation,counts = update_representation_median(representation,counts,state,action,states[state[0]][state[1]],alpha=0.3)
+            score = sum([elem for elem in representation.values() if elem > 0])
+    return representation
+
 
 def play(board,representation):
     state = (0,0)
@@ -107,8 +141,7 @@ def play(board,representation):
 
 def main():
     print("started training")
-    board = create_board(100,100)
-    representation = train(board,50)
+    representation = train(create_board(100,100))
     print("learned representation")
     count,traversal,path = play(board,representation)
     print("It took",count)
